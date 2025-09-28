@@ -24,11 +24,7 @@ class AuthService:
         new_user = User(
             user_login=user_data.user_login,
             user_password=hashed_password,
-            user_name=user_data.user_name,
-            user_surname=user_data.user_surname,
-            user_patronymic=user_data.user_patronymic,
-            user_birthday=user_data.user_birthday,
-            user_sex=user_data.user_sex
+            user_name=user_data.user_name
         )
         db.add(new_user)
         db.commit()
