@@ -1,8 +1,10 @@
+from pydantic import UUID4
 from app.ProductsDAO.typesproducts import ProductsTypesDAO
 from typing import List
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.decorator import handle_api_exceptions
 from app.schemas import UserCreate, UserDTO, UserLogin, ProductTypeDTO
 from app.services.auth_service import AuthService
 from datetime import timedelta
@@ -12,9 +14,10 @@ from app.models import User
 app = FastAPI()
 
 
-@app.get("/", response_model=List[ProductTypeDTO])
-def main_test():
-    return ProductsTypesDAO.get_all_products_types()
+@app.get("/getallproductstypes", response_model=List[ProductTypeDTO])
+@handle_api_exceptions
+def get_all_products_types():
+    return ProductsTypesDAO.get_all_productstype_types()
 
 
 @app.post("/register")
@@ -43,3 +46,23 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
     )
 
     return {"access_token": access_token, "token_type": "bearer"}
+
+##CRUD FOR TABLE T_PRODUCTSTYPE
+@app.get("/getproducttypebyid")
+@handle_api_exceptions
+def get_product_type_by_id(UUID: UUID4):
+    return ProductsTypesDAO.get_productstype_by_id(UUID)
+@app.post("/create_new_producttype")
+@handle_api_exceptions
+def create_producttype(new_type: str, db: Session=Depends(get_db)):
+    return ProductsTypesDAO.create_new_product_type(new_type)
+
+@app.patch("/updateproductname")
+@handle_api_exceptions
+def update_product_type_by_id(UUID: UUID4, new_type: str, db: Session=Depends(get_db)):
+     return ProductsTypesDAO.update_producttype_by_id(UUID,new_type)
+    
+@app.delete("/deleteproducttype")
+@handle_api_exceptions
+def delete_product_type_by_id(UUID: UUID4, db: Session=Depends(get_db)):
+    return ProductsTypesDAO.delete_producttype_by_id(UUID)
