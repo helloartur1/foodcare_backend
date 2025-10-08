@@ -22,9 +22,9 @@ def handle_db_exceptions(func):
 def handle_api_exceptions(func):
     """Декоратор для обработки исключений в API endpoints"""
     @wraps(func)
-    async def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs):
         try:
-            return await func(*args, **kwargs)
+            return func(*args, **kwargs)
         except HTTPException:
             raise
         except ValueError as e:
