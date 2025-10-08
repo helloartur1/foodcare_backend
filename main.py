@@ -17,7 +17,7 @@ app = FastAPI()
 @app.get("/getallproductstypes", response_model=List[ProductTypeDTO])
 @handle_api_exceptions
 def get_all_products_types():
-    return ProductsTypesDAO.get_all_productstype_types()
+    return ProductsTypesDAO.select_all_products_types()
 
 
 @app.post("/register")
@@ -51,7 +51,7 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
 @app.get("/getproducttypebyid")
 @handle_api_exceptions
 def get_product_type_by_id(UUID: UUID4):
-    return ProductsTypesDAO.get_productstype_by_id(UUID)
+    return ProductsTypesDAO.select_producttype_by_id(UUID)
 @app.post("/create_new_producttype")
 @handle_api_exceptions
 def create_producttype(new_type: str, db: Session=Depends(get_db)):

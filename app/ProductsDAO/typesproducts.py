@@ -9,7 +9,7 @@ from app.models import ProductType
 class ProductsTypesDAO:
     @staticmethod
     @handle_db_exceptions
-    def get_all_products_types():
+    def select_all_products_types():
         with SessionLocal() as session:
             query = select(ProductType)
             result = session.execute(query).scalars().all()
@@ -105,3 +105,12 @@ class ProductsTypesDAO:
                 "status": "success",
                 "message": f"Product type with UUID '{UUID}' deleted successfully",
             }
+
+
+    @staticmethod
+    @handle_db_exceptions
+    def select_producttype_by_id(UUID: UUID4):
+        with SessionLocal() as session:
+            query = select(ProductType).where(ProductType.prodtype_id==UUID)
+            result = session.execute(query).scalars().one()
+            return result
