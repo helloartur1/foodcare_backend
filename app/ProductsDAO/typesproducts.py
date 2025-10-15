@@ -6,6 +6,7 @@ from app.database import SessionLocal
 from app.decorator import handle_db_exceptions
 from app.models import ProductType
 
+
 class ProductsTypesDAO:
     @staticmethod
     @handle_db_exceptions

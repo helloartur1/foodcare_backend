@@ -2,6 +2,7 @@ from functools import wraps
 from fastapi import HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 
+
 def handle_db_exceptions(func):
     """Декоратор для обработки исключений БД в методах DAO"""
     @wraps(func)
@@ -18,6 +19,7 @@ def handle_db_exceptions(func):
             # Обрабатываем все остальные исключения
             raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
     return wrapper
+
 
 def handle_api_exceptions(func):
     """Декоратор для обработки исключений в API endpoints"""

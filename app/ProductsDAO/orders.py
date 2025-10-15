@@ -6,6 +6,8 @@ from app.database import SessionLocal
 from app.decorator import handle_db_exceptions
 from app.models import Order, User
 from datetime import date
+
+
 class OrdersDAO:
     
     @staticmethod
@@ -34,7 +36,7 @@ class OrdersDAO:
     
     @staticmethod
     @handle_db_exceptions
-    def select_all_orders_by_user_id(user_id:UUID4):
+    def select_all_orders_by_user_id(user_id: UUID4):
         with SessionLocal() as session:
             query = select(Order).where(Order.id_user==user_id)
             result = session.execute(query).scalars().one()
@@ -42,7 +44,7 @@ class OrdersDAO:
     
     @staticmethod
     @handle_db_exceptions
-    def update_order_by_id(order_id: UUID4,date_order: date):
+    def update_order_by_id(order_id: UUID4, date_order: date):
         with SessionLocal() as session:
             existing_order = session.execute(
                 select(Order).where(Order.order_id == order_id)
