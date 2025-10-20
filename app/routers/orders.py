@@ -4,6 +4,8 @@ from fastapi import APIRouter
 from app.decorator import handle_api_exceptions
 from datetime import date
 
+from app.schemas import ProductDTO, UserFridgeItemDTO
+
 app = APIRouter(prefix="/order")
 
 @app.get("/fsdfsdfsdgsdrweerqrww")
@@ -36,3 +38,8 @@ def update_order(order_id : UUID4, order_date : date):
 @handle_api_exceptions
 def delete_order(order_id : UUID4):
     return OrdersDAO.delete_order_by_id(order_id)
+
+@app.get("/getallproductsuser",response_model=list[UserFridgeItemDTO])
+@handle_api_exceptions
+def get_fridge_by_user(user_id: UUID4):
+    return OrdersDAO.user_fridge(user_id)

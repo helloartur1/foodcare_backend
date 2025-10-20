@@ -40,3 +40,26 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     user_id: Optional[str] = None
     user_login: Optional[str] = None
+
+class ProductDTO(BaseModel):
+    product_id: UUID
+    product_name: str
+    product_thumbnail: Optional[str] = None
+    product_type: Optional[UUID] = None
+    product_desc: Optional[str] = None
+    product_rating: Optional[float] = None
+    product_barcode: int
+
+    model_config = {"from_attributes": True}
+
+class OrderProductDTO(BaseModel):
+    order_product_id: UUID
+    product_date_start: date
+    product_date_end: Optional[date]
+
+    model_config = {"from_attributes": True}
+
+
+class UserFridgeItemDTO(BaseModel):
+    order_product: OrderProductDTO
+    product: ProductDTO

@@ -38,7 +38,7 @@ class OrdersProductsDAO:
                     select(Product).where(
                         Product.product_id == id_product
                     )
-                ).scalar_one_or_none()
+                ).first()
                 if not existing_product:
                     raise HTTPException(
                         status_code=400,
@@ -50,7 +50,7 @@ class OrdersProductsDAO:
                 existing_order = Session.execute(
                     select(Product).where(
                         Order.order_id == id_order
-                    )).scalar_one_or_none()
+                    )).first()
                 if not existing_order:
                     raise HTTPException(
                         status_code=400,

@@ -56,7 +56,7 @@ class ProductsDAO:
                 select(Product).where(
                     Product.product_name == normalized_name or Product.product_barcode == product_barcode
                 )
-            ).scalar_one_or_none()
+            ).first()
             
             if(existing_product):
                 raise HTTPException(
