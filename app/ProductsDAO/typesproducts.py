@@ -26,7 +26,7 @@ class ProductsTypesDAO:
             # Проверяем, существует ли уже такой тип продукта
             existing_type = session.execute(
                 select(ProductType).where(ProductType.prodtype_name == normalized_name)
-            ).scalar_one_or_none()
+            ).first()
             
             if existing_type:
                 raise HTTPException(

@@ -4,8 +4,10 @@ from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select, insert, update, delete
 from app.database import SessionLocal
 from app.decorator import handle_db_exceptions
-from app.models import Order, User
+from app.models import Order, User, Product, ProductType, OrderProduct
 from datetime import date
+
+from app.schemas import OrderProductDTO, ProductDTO, UserFridgeItemDTO
 
 
 class OrdersDAO:
@@ -39,7 +41,7 @@ class OrdersDAO:
     def select_all_orders_by_user_id(user_id: UUID4):
         with SessionLocal() as session:
             query = select(Order).where(Order.id_user==user_id)
-            result = session.execute(query).scalars().one()
+            result = session.execute(query).scalars().all() 
             return result
     
     @staticmethod
@@ -86,3 +88,25 @@ class OrdersDAO:
                 "status": "success",
                 "message": f"Order with UUID '{order_id}' deleted successfully",
             }
+    
+    
+    @staticmethod
+    @handle_db_exceptions
+    def user_fridge(user_id: UUID4):
+        with SessionLocal() as session:
+            query = (
+                select(OrderProduct, Product)
+                .join(Order, OrderProduct.id_order == Order.order_id)
+                .join(Product, OrderProduct.id_product == Product.product_id)
+                .where(Order.id_user == user_id)
+            )
+
+            result = session.execute(query).all()
+
+            return [
+                UserFridgeItemDTO(
+                    order_product=OrderProductDTO.from_orm(op),
+                    product=ProductDTO.from_orm(p)
+                )
+                for op, p in result
+            ]
