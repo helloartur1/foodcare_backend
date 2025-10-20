@@ -25,7 +25,7 @@ def get_order_product_by_id(UUID: UUID4):
 @handle_api_exceptions
 def create_order_product(id_order: UUID4, id_product: UUID4, product_date_end: date,
                          product_date_start: Optional[date] = None):
-    return OrdersProductsDAO.create_new_order_product(id_order, id_product, product_date_end, product_date_start)
+    return OrdersProductsDAO.create_new_order_product(id_order, id_product, product_date_start, product_date_end)
 
 
 @app.patch("/update_order_product")
