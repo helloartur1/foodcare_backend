@@ -65,6 +65,14 @@ class OrderProductDTO(BaseModel):
     product_date_start: Optional[date]
     product_date_end: date
 
+    model_config = {"from_attributes": True}
+
+class OrderProductCreate(BaseModel):
+    id_order: UUID
+    id_product: UUID
+    product_date_start: Optional[date]
+    product_date_end: date
+
     @field_validator("product_date_end")
     @classmethod
     def validate_date_end(cls, value: date, info):
@@ -79,8 +87,6 @@ class OrderProductDTO(BaseModel):
             raise ValueError("product_date_end должна иметь хотя бы сегодняшнюю дату")
         
         return value
-
-    model_config = {"from_attributes": True}
 
 class UserFridgeItemDTO(BaseModel):
     order_product: OrderProductDTO
