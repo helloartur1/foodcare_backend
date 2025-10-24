@@ -30,8 +30,8 @@ class UserCreate(BaseModel):
     @field_validator("password")
     @classmethod
     def password_validation(cls, value:str) -> str:
-        if not re.match(r'^[A-Z][a-zA-Z0-9]*$', value):
-            raise ValueError("Пароль должен содержать только латинские символы, цифры и начинаться с заглавной буквы")
+        if (not re.match(r'[a-zA-Z0-9]*$', value)) or (not re.search(r'[A-Z]', value)):
+            raise ValueError("Пароль должен содержать только латинские символы, цифры и иметь хотя бы 1 заглавную букву")
         return value
 
 class UserLogin(BaseModel):
