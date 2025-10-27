@@ -91,3 +91,6 @@ class OrderProductCreate(BaseModel):
 class UserFridgeItemDTO(BaseModel):
     order_product: OrderProductDTO
     product: ProductDTO
+
+class ProductList(BaseModel):
+    products: list[str]
