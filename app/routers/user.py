@@ -8,6 +8,7 @@ from app.models import User
 
 app = APIRouter()
 
+
 @app.post("/register")
 def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
     try:

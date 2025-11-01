@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import HTTPException
 from pydantic import UUID4
 from sqlalchemy import select, insert, update, delete
@@ -14,8 +15,7 @@ class OrdersProductsDAO:
     def select_all_orders_products():
         with SessionLocal() as Session:
             query = select(OrderProduct)
-            result = Session.execute(query).scalars().all()
-            return result
+            return Session.execute(query).scalars().all()
 
     @staticmethod
     @handle_db_exceptions
@@ -48,7 +48,7 @@ class OrdersProductsDAO:
             # Проверка на существование заказа
             if id_order:
                 existing_order = Session.execute(
-                    select(Product).where(
+                    select(Order).where(
                         Order.order_id == id_order
                     )).first()
                 if not existing_order:
@@ -91,7 +91,7 @@ class OrdersProductsDAO:
             # Проверка на существование заказа
             if id_order:
                 existing_order = Session.execute(
-                    select(Product).where(
+                    select(Order).where(
                         Order.order_id == id_order
                     )).scalar_one_or_none()
                 if not existing_order:
@@ -100,7 +100,7 @@ class OrdersProductsDAO:
                         detail=f"This id_order does not exist"
                     )
 
-            query = update(OrderProduct).where(OrderProduct.order_product_id == UUID).values(id_order=id_product,
+            query = update(OrderProduct).where(OrderProduct.order_product_id == UUID).values(id_order=id_order,
                                                                                              id_product=id_product,
                                                                                              product_date_start=product_date_start,
                                                                                              product_date_end=product_date_end)
@@ -121,7 +121,7 @@ class OrdersProductsDAO:
     def delete_order_product_by_id(UUID: UUID4):
         with SessionLocal() as Session:
             existing_order_product = Session.execute(
-                select(Product).where(OrderProduct.order_product_id == UUID)
+                select(OrderProduct).where(OrderProduct.order_product_id == UUID)
             ).scalar_one_or_none()
 
             if not existing_order_product:
@@ -130,11 +130,42 @@ class OrdersProductsDAO:
                     detail=f"ProductOrder with ID '{UUID}' does not exist"
                 )
 
-            query = delete(Product).where(OrderProduct.order_product_id == UUID)
+            query = delete(OrderProduct).where(OrderProduct.order_product_id == UUID)
             result = Session.execute(query)
             Session.commit()
 
             return {
                 "status": "success",
                 "message": f"ProductOrder with UUID '{UUID}' deleted successfully",
+            }
+
+    @staticmethod
+    @handle_db_exceptions
+    def create_with_defaults(id_order: UUID4,
+                             id_product: UUID4,
+                             product_date_end: date,
+                             product_date_start: Optional[date] = None):
+        date_start = product_date_start or date.today()
+
+        with SessionLocal() as Session:
+            if not Session.execute(select(Product).where(Product.product_id == id_product)).scalar_one_or_none():
+                raise HTTPException(status_code=400, detail="This id_product does not exist")
+
+            if not Session.execute(select(Order).where(Order.order_id == id_order)).scalar_one_or_none():
+                raise HTTPException(status_code=400, detail="This id_order does not exist")
+
+            obj = OrderProduct(
+                id_order=id_order,
+                id_product=id_product,
+                product_date_start=date_start,
+                product_date_end=product_date_end
+            )
+            Session.add(obj)
+            Session.commit()
+            Session.refresh(obj)
+
+            return {
+                "status": "success",
+                "order_product_id": str(obj.order_product_id),
+                "message": f"OrderProduct for order '{id_order}' created"
             }

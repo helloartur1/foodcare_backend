@@ -48,6 +48,7 @@ class TokenData(BaseModel):
     user_id: Optional[str] = None
     user_login: Optional[str] = None
 
+
 class ProductDTO(BaseModel):
     product_id: UUID
     product_name: str = Field(min_length=1, max_length=100)
@@ -66,6 +67,7 @@ class OrderProductDTO(BaseModel):
     product_date_end: date
 
     model_config = {"from_attributes": True}
+
 
 class OrderProductCreate(BaseModel):
     id_order: UUID
@@ -88,9 +90,35 @@ class OrderProductCreate(BaseModel):
         
         return value
 
+
 class UserFridgeItemDTO(BaseModel):
     order_product: OrderProductDTO
     product: ProductDTO
 
+
 class ProductList(BaseModel):
     products: list[str]
+
+
+class BarcodeScanIn(BaseModel):
+    barcode: str = Field(..., example="4601234567890")
+    user_id: UUID
+
+
+class OffProductOut(BaseModel):
+    product_id: UUID
+    product_name: str
+    product_barcode: int
+    product_thumbnail: Optional[str] = None
+    product_desc: Optional[str] = None
+    product_type_name: str
+
+    model_config = {"from_attributes": True}
+
+
+class ScanResultOut(BaseModel):
+    order_id: UUID
+    product_id: UUID
+    created_product: bool
+    created_product_type: bool
+    product: OffProductOut
