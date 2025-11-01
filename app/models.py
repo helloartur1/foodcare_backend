@@ -29,7 +29,7 @@ class Order(Base):
     __tablename__ = "T_Orders"
 
     order_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    id_user = Column(UUID(as_uuid=True), ForeignKey('T_Users.user_id'), nullable=False)
+    id_user = Column(UUID(as_uuid=True), ForeignKey('T_Users.user_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     order_date = Column(Date, nullable=False)
 
     user = relationship("User", back_populates="orders")
@@ -42,7 +42,7 @@ class Product(Base):
     product_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     product_name = Column(String, nullable=False)
     product_thumbnail = Column(String, nullable=True)
-    product_type = Column(UUID(as_uuid=True), ForeignKey('T_ProductTypes.prodtype_id'), nullable=True)
+    product_type = Column(UUID(as_uuid=True), ForeignKey('T_ProductTypes.prodtype_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
     product_desc = Column(String, nullable=True)
     product_rating = Column(Float, nullable=True)
     product_barcode = Column(BigInteger, nullable=False)
@@ -55,8 +55,8 @@ class OrderProduct(Base):
     __tablename__ = "T_OrdersProducts"
 
     order_product_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    id_order = Column(UUID(as_uuid=True), ForeignKey('T_Orders.order_id'), nullable=False)
-    id_product = Column(UUID(as_uuid=True), ForeignKey('T_Products.product_id'), nullable=False)
+    id_order = Column(UUID(as_uuid=True), ForeignKey('T_Orders.order_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    id_product = Column(UUID(as_uuid=True), ForeignKey('T_Products.product_id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     product_date_start = Column(Date, nullable=True)
     product_date_end = Column(Date, nullable=False)
 
