@@ -34,6 +34,7 @@ class UserCreate(BaseModel):
             raise ValueError("Пароль должен содержать только латинские символы, цифры и иметь хотя бы 1 заглавную букву")
         return value
 
+
 class UserLogin(BaseModel):
     user_login: EmailStr = Field(default=..., description="Электронная почта пользователя")
     password: str
@@ -47,6 +48,7 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     user_id: Optional[str] = None
     user_login: Optional[str] = None
+
 
 class ProductDTO(BaseModel):
     product_id: UUID
@@ -67,10 +69,11 @@ class OrderProductDTO(BaseModel):
 
     model_config = {"from_attributes": True}
 
+
 class OrderProductCreate(BaseModel):
     id_order: UUID
     id_product: UUID
-    product_date_start: Optional[date]
+    product_date_start: Optional[date] = None
     product_date_end: date
 
     @field_validator("product_date_end")
@@ -79,7 +82,6 @@ class OrderProductCreate(BaseModel):
 
         values = info.data
         product_date_start = values.get("product_date_start")
-        print(product_date_start, value)
         if product_date_start is not None and value <= product_date_start:
             raise ValueError("product_date_end должен быть больше product_date_start")
 
@@ -88,9 +90,35 @@ class OrderProductCreate(BaseModel):
         
         return value
 
+
 class UserFridgeItemDTO(BaseModel):
     order_product: OrderProductDTO
     product: ProductDTO
 
+
 class ProductList(BaseModel):
     products: list[str]
+
+
+class BarcodeScanIn(BaseModel):
+    barcode: str = Field(..., example="4601234567890")
+    user_id: UUID
+
+
+class OffProductOut(BaseModel):
+    product_id: UUID
+    product_name: str
+    product_barcode: int
+    product_thumbnail: Optional[str] = None
+    product_desc: Optional[str] = None
+    product_type_name: str
+
+    model_config = {"from_attributes": True}
+
+
+class ScanResultOut(BaseModel):
+    order_id: UUID
+    product_id: UUID
+    created_product: bool
+    created_product_type: bool
+    product: OffProductOut

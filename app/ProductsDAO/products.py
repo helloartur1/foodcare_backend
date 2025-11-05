@@ -1,7 +1,8 @@
 from fastapi import HTTPException
 from pydantic import UUID4
+from typing import Optional, Tuple
 from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import select, insert, update, delete
+from sqlalchemy import select, insert, update, delete, func
 from app.database import SessionLocal
 from app.decorator import handle_db_exceptions
 from app.models import Product, ProductType
@@ -34,7 +35,7 @@ class ProductsDAO:
                            product_barcode: int):
         with SessionLocal() as Session:
             #Нормализация названия и описания продукта, если они были переданы
-            normalized_name = product_name.capitalize()
+            normalized_name = product_name.strip().capitalize()
             if(product_desc):
                 normalized_desc = product_desc.capitalize()
             else:
@@ -58,7 +59,7 @@ class ProductsDAO:
                 )
             ).first()
             
-            if(existing_product):
+            if (existing_product):
                 raise HTTPException(
                     status_code=400, 
                     detail=f"Product '{normalized_name}' already exists"
@@ -88,7 +89,7 @@ class ProductsDAO:
                              product_barcode: int):
         with SessionLocal() as Session:
             #Нормализация названия и описания продукта, если они были переданы
-            normalized_name = product_name.capitalize()
+            normalized_name = product_name.strip().capitalize()
             if(product_desc):
                 normalized_desc = product_desc.capitalize()
             else:
@@ -147,3 +148,60 @@ class ProductsDAO:
                 "status": "success",
                 "message": f"Product with UUID '{UUID}' deleted successfully",
             }
+
+    @staticmethod
+    @handle_db_exceptions
+    def select_product_by_barcode(product_barcode: int):
+        with SessionLocal() as Session:
+            return Session.execute(
+                select(Product).where(Product.product_barcode == product_barcode)
+            ).scalar_one_or_none()
+
+    @staticmethod
+    @handle_db_exceptions
+    def select_product_by_name(product_name: str):
+        name = (product_name or "").strip()
+        with SessionLocal() as Session:
+            return Session.execute(
+                select(Product).where(func.lower(Product.product_name) == name.lower())
+            ).scalar_one_or_none()
+
+    @staticmethod
+    @handle_db_exceptions
+    def get_or_create_product_from_off(product_name: str,
+                                       product_thumbnail: Optional[str],
+                                       product_type: Optional[UUID4],
+                                       product_desc: Optional[str],
+                                       product_barcode: int) -> Tuple[Product, bool]:
+        normalized_name = (product_name or "Без названия")
+        normalized_desc = (product_desc if product_desc else None)
+
+        with SessionLocal() as Session:
+            if product_type:
+                exists_type = Session.execute(
+                    select(ProductType).where(ProductType.prodtype_id == product_type)
+                ).scalar_one_or_none()
+                if not exists_type:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"ProductTypeID in '{normalized_name}' does not exist"
+                    )
+
+            by_barcode = Session.execute(
+                select(Product).where(Product.product_barcode == product_barcode)
+            ).scalar_one_or_none()
+            if by_barcode:
+                return by_barcode, False
+
+            obj = Product(
+                product_name=normalized_name,
+                product_thumbnail=product_thumbnail,
+                product_type=product_type,
+                product_desc=normalized_desc,
+                product_rating=None,
+                product_barcode=product_barcode,
+            )
+            Session.add(obj)
+            Session.commit()
+            Session.refresh(obj)
+            return obj, True
