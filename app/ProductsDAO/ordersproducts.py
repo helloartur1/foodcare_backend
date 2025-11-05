@@ -7,6 +7,7 @@ from app.decorator import handle_db_exceptions
 from app.models import OrderProduct, Product, Order
 from datetime import date
 from sqlalchemy.orm import Session
+from app.services.openfoodfacts_service import today_date
 
 
 class OrdersProductsDAO:
@@ -145,7 +146,8 @@ class OrdersProductsDAO:
                              id_product: UUID4,
                              product_date_end: date,
                              product_date_start: Optional[date] = None):
-        date_start = product_date_start or date.today()
+
+        date_start = product_date_start or today_date()
 
         with SessionLocal() as Session:
             if not Session.execute(select(Product).where(Product.product_id == id_product)).scalar_one_or_none():

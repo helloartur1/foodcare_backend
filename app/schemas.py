@@ -34,6 +34,7 @@ class UserCreate(BaseModel):
             raise ValueError("Пароль должен содержать только латинские символы, цифры и иметь хотя бы 1 заглавную букву")
         return value
 
+
 class UserLogin(BaseModel):
     user_login: EmailStr = Field(default=..., description="Электронная почта пользователя")
     password: str
@@ -72,7 +73,7 @@ class OrderProductDTO(BaseModel):
 class OrderProductCreate(BaseModel):
     id_order: UUID
     id_product: UUID
-    product_date_start: Optional[date]
+    product_date_start: Optional[date] = None
     product_date_end: date
 
     @field_validator("product_date_end")
@@ -81,7 +82,6 @@ class OrderProductCreate(BaseModel):
 
         values = info.data
         product_date_start = values.get("product_date_start")
-        print(product_date_start, value)
         if product_date_start is not None and value <= product_date_start:
             raise ValueError("product_date_end должен быть больше product_date_start")
 

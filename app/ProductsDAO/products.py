@@ -173,8 +173,8 @@ class ProductsDAO:
                                        product_type: Optional[UUID4],
                                        product_desc: Optional[str],
                                        product_barcode: int) -> Tuple[Product, bool]:
-        normalized_name = (product_name or "Без названия").strip().capitalize()
-        normalized_desc = (product_desc.strip().capitalize() if product_desc else None)
+        normalized_name = (product_name or "Без названия")
+        normalized_desc = (product_desc if product_desc else None)
 
         with SessionLocal() as Session:
             if product_type:

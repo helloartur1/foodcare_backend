@@ -8,9 +8,6 @@ from fastapi import FastAPI
 
 app = FastAPI()
 
-from dotenv import load_dotenv, find_dotenv
-load_dotenv(find_dotenv(), override=False)
-
 app.include_router(user.app, tags=["User"])
 
 app.include_router(products_types.app, tags=["ProductTypes"])

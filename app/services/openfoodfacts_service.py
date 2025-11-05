@@ -9,7 +9,8 @@ from fastapi import HTTPException
 api = openfoodfacts.API(user_agent="FoodCareBackend/1.0")
 _FIELDS: List[str] = ["code",
                       "product_name", "product_name_ru", "product_name_en",
-                      "brands_tags", "categories_tags_ru", "image_url"]
+                      "brands_tags", "categories_tags_ru", "categories_tags", "image_url",
+                      "ingredients_text_ru", "generic_name_ru", "ingredients_text", "generic_name"]
 
 
 # Получение данных о продукте по шрихкоду из OpenFoodFacts
@@ -27,21 +28,37 @@ async def fetch_off_product(barcode: str) -> Dict[str, Any]:
     return product
 
 
+def normalize_tag_to_name(tag: str):
+    part = tag.split(":", 1)[-1]
+    part = part.replace("-", " ").replace("_", " ").strip()
+    return part.capitalize()
+
+
 # Парсинг словаря с информацией о продуктах
 def parse_off_product(off: Dict[str, Any]) -> Dict[str, Any]:
     name = (off.get("product_name")
             or off.get("product_name_ru")
-            or off.get("product_name_en")).strip()
+            or off.get("product_name_en")
+            or "").strip().capitalize()
 
-    brand = off.get("brands_tags")
-    prod_type = off.get("categories_tags")
+    brand_tags = off.get("brands_tags") or []
+    brand = (brand_tags[0].capitalize() if brand_tags else None)
+
+    prod_type = (off.get("categories_tags_ru")[0] or off.get("categories_tags")[0])
+
+    description = (
+            off.get("ingredients_text_ru")
+            or off.get("generic_name_ru")
+            or off.get("ingredients_text")
+            or off.get("generic_name")
+        )
     thumbnail = (off.get("image_url") or None)
     barcode = (off.get("code") or "").strip() or None
 
     return {
-        "name": name,
-        "brand": brand,
+        "name": f"{name} {brand}".strip() if name and brand else (name or brand),
         "product_type_name": prod_type,
+        "description": description,
         "thumbnail": thumbnail,
         "barcode": barcode,
     }
@@ -49,10 +66,3 @@ def parse_off_product(off: Dict[str, Any]) -> Dict[str, Any]:
 
 def today_date() -> dt.date:
     return dt.datetime.utcnow().date()
-# res = api.product.get(code, fields=["code", "product_name", "brands_tags",
-# "categories_tags_ru", "image_url", "image_small_url", "image_front_small_url"])
-# product_name = 'product_name' + 'brands_tags'
-# product_thumbnail = 'image_url'
-# product_type = 'categories_tags'
-# product_desc = ''
-# product_barcode = 'code'

@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from pydantic import UUID4
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select, insert, update, delete, func
 from app.database import SessionLocal
@@ -129,7 +129,7 @@ class ProductsTypesDAO:
     @staticmethod
     @handle_db_exceptions
     def get_or_create_producttype(type_name: str) -> Tuple[ProductType, bool]:
-        normalized_name = type_name.strip().capitalize()
+        normalized_name = (type_name or "").strip()
         with SessionLocal() as session:
             existing = session.execute(
                 select(ProductType).where(
