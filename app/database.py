@@ -24,7 +24,7 @@ def get_auth_data():
     return {"secret_key": SECRET_KEY, "algorithm": ALGORITHM}
 
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+engine = create_engine(SQLALCHEMY_DATABASE_URL,connect_args={"options": "-c client_encoding=utf8"})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
