@@ -4,7 +4,7 @@ from sqlalchemy import pool
 from app.database import Base, SQLALCHEMY_DATABASE_URL
 from app.models import Product, ProductType, User, Order, OrderProduct
 from alembic import context
-
+print("SQLALCHEMY_DATABASE_URL:", repr(SQLALCHEMY_DATABASE_URL))
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -56,7 +56,10 @@ def run_migrations_online() -> None:
     In this scenario we need to create an Engine
     and associate a connection with the context.
 
+
     """
+    print("🔍 Alembic connecting with URL:", SQLALCHEMY_DATABASE_URL)
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",

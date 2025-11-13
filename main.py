@@ -18,11 +18,3 @@ app.include_router(orders.app, tags=["Orders"])
 app.include_router(order_product.app, tags=["OrderProducts"])
 
 app.include_router(generate_recipes.app, tags = ["GPT"])
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
