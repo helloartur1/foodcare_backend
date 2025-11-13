@@ -6,17 +6,18 @@ from app.database import SessionLocal
 from app.decorator import handle_db_exceptions
 from app.models import Order, User, Product, ProductType, OrderProduct
 from datetime import date
+from typing import Optional
 
 from app.schemas import OrderProductDTO, ProductDTO, UserFridgeItemDTO
 
 
 class OrdersDAO:
-    
     @staticmethod
     def testtest():
         with SessionLocal() as session:
             query = select(User)
             return session.execute(query).scalars().all()
+
     @staticmethod
     @handle_db_exceptions
     def create_new_order(user_id: UUID4, order_date: date):
@@ -28,6 +29,7 @@ class OrdersDAO:
                 "status":"success",
                 "message":f"Order for user '{user_id}' created"
             }
+
     @staticmethod
     @handle_db_exceptions
     def select_all_orders():
@@ -88,8 +90,7 @@ class OrdersDAO:
                 "status": "success",
                 "message": f"Order with UUID '{order_id}' deleted successfully",
             }
-    
-    
+
     @staticmethod
     @handle_db_exceptions
     def user_fridge(user_id: UUID4):
@@ -110,3 +111,31 @@ class OrdersDAO:
                 )
                 for op, p in result
             ]
+
+    @staticmethod
+    @handle_db_exceptions
+    def select_order_by_id(order_id: UUID4):
+        with SessionLocal() as session:
+            row = session.execute(
+                select(Order).where(Order.order_id == order_id)
+            ).scalar_one_or_none()
+            if not row:
+                raise HTTPException(status_code=404, detail="Order not found")
+            return row
+
+    @staticmethod
+    @handle_db_exceptions
+    def create_order_for_scan(user_id: UUID4, when: Optional[date] = None):
+        with SessionLocal() as session:
+            obj = Order(
+                id_user=user_id,
+                order_date=when or date.today(),
+            )
+            session.add(obj)
+            session.commit()
+            session.refresh(obj)
+            return {
+                "status": "success",
+                "order_id": str(obj.order_id),
+                "message": f"Order for user '{user_id}' created"
+            }
