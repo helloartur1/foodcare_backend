@@ -107,12 +107,12 @@ class BarcodeScanIn(BaseModel):
 
 class OffProductOut(BaseModel):
     product_id: UUID
-    product_name: str
+    product_name: str = Field(max_length=100)
     product_barcode: int
-    product_thumbnail: Optional[str] = None
+    product_thumbnail: Optional[str] = Field(default=None, max_length=255)
     product_desc: Optional[str] = None
     product_type_name: str
-
+    
     model_config = {"from_attributes": True}
 
 

@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.database import get_db, SessionLocal
 from app.models import User
-from app.services.openfoodfacts_service import fetch_off_product, parse_off_product, today_date
+from app.services.openfoodfacts_service import fetch_off_product, parse_off_product, today_date, normalize_product_name, normalize_product_desc
 from app.ProductsDAO.products import ProductsDAO
 from app.ProductsDAO.typesproducts import ProductsTypesDAO
 from app.ProductsDAO.orders import OrdersDAO
@@ -49,10 +49,10 @@ async def scan_barcode(payload: BarcodeScanIn):
     #Если продукта не существует, то создание нового продукта
     if not product:
         product, created_product = ProductsDAO.get_or_create_product_from_off(
-            product_name=parsed["name"] or "Без названия",
+            product_name=normalize_product_name(parsed["name"]) or "Без названия",
             product_thumbnail=parsed["thumbnail"],
             product_type=prodtype.prodtype_id,
-            product_desc=parsed["description"],
+            product_desc=normalize_product_desc(parsed["description"]),
             product_barcode=barcode_int,
         )
         created_product = True
