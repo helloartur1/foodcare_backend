@@ -66,3 +66,11 @@ def parse_off_product(off: Dict[str, Any]) -> Dict[str, Any]:
 
 def today_date() -> dt.date:
     return dt.datetime.utcnow().date()
+
+#Методы для обрезки описания
+def normalize_product_desc(desc:str)->str:
+    if not desc:
+        return ""
+    if len(desc) >= 254:
+        return desc[0:251] + "..."
+    return desc
