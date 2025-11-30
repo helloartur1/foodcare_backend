@@ -1,10 +1,10 @@
 from __future__ import annotations
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.database import get_db, SessionLocal
 from app.models import User
-from app.services.openfoodfacts_service import fetch_off_product, parse_off_product, today_date, normalize_product_name, normalize_product_desc
+from app.services.openfoodfacts_service import fetch_off_product, parse_off_product, today_date, normalize_product_desc
 from app.ProductsDAO.products import ProductsDAO
 from app.ProductsDAO.typesproducts import ProductsTypesDAO
 from app.ProductsDAO.orders import OrdersDAO
@@ -14,23 +14,32 @@ from app.schemas import (
     BarcodeScanIn, ScanResultOut, OffProductOut,
     OrderProductCreate, OrderProductDTO
 )
+from datetime import date, timedelta
 
 app = APIRouter(prefix="/openfoodfacts", tags=["OpenFoodFacts"])
 
-
+current_date = date.today().strftime("%Y-%m-%d")
 @app.post("/scan", response_model=ScanResultOut, summary="Скан штрихкода → найти/создать ProductType, Product и Order")
-async def scan_barcode(payload: BarcodeScanIn):
-    off_raw = await fetch_off_product(payload.barcode)
+async def scan_barcode(
+    user_id: UUID = Query(..., description="UUID пользователя"),
+    barcode: str = Query(..., description="Штрихкод продукта"),
+    start_date: date = Query(..., description="Дата начала хранения продукта"),
+    end_date : date = Query(..., description="Дата окончания хранения продукта"),
+):
+    print(f"user_id: {user_id}, barcode: {barcode}")
+    print(type(barcode), type(user_id))
+
+    off_raw = await fetch_off_product(barcode)
     parsed = parse_off_product(off_raw)
 
     #Проверка UUID пользователя
     with SessionLocal() as Session:
         exists = Session.execute(
-            select(User.user_id).where(User.user_id == payload.user_id)
+            select(User.user_id).where(User.user_id == user_id)
         ).scalar_one_or_none()
 
         if not exists:
-            raise HTTPException(status_code=404, detail=f"Пользователь с id '{payload.user_id}' не найден")
+            raise HTTPException(status_code=404, detail=f"Пользователь с id '{user_id}' не найден")
 
     #Проверка шрихкода
     if not parsed["barcode"]:
@@ -49,7 +58,7 @@ async def scan_barcode(payload: BarcodeScanIn):
     #Если продукта не существует, то создание нового продукта
     if not product:
         product, created_product = ProductsDAO.get_or_create_product_from_off(
-            product_name=normalize_product_name(parsed["name"]) or "Без названия",
+            product_name="Без названия",
             product_thumbnail=parsed["thumbnail"],
             product_type=prodtype.prodtype_id,
             product_desc=normalize_product_desc(parsed["description"]),
@@ -57,15 +66,23 @@ async def scan_barcode(payload: BarcodeScanIn):
         )
         created_product = True
 
-    #Cоздание Order на момент скана
-    order_res = OrdersDAO.create_order_for_scan(user_id=payload.user_id, when=today_date())
+    order_res = OrdersDAO.create_order_for_scan(user_id=user_id, when=today_date())
+    result = await create_order_product(
+        payload=OrderProductCreate(
+            id_order=order_res["order_id"],
+            id_product=product.product_id,
+            product_date_end=end_date,
+            product_date_start=start_date,
+        ))
+    print(result)
     order_id = UUID(order_res["order_id"])
-
     return ScanResultOut(
         order_id=order_id,
         product_id=product.product_id,
         created_product=created_product,
         created_product_type=created_pt,
+        start_date=start_date,
+        end_date=end_date,
         product=OffProductOut(
             product_id=product.product_id,
             product_name=product.product_name,
@@ -73,6 +90,7 @@ async def scan_barcode(payload: BarcodeScanIn):
             product_thumbnail=product.product_thumbnail,
             product_desc=product.product_desc,
             product_type_name=prodtype.prodtype_name,
+            
         ),
     )
 

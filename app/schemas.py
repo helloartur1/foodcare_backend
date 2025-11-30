@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
 from typing import Optional
 from datetime import date, timedelta
 from uuid import UUID
@@ -101,8 +101,13 @@ class ProductList(BaseModel):
 
 
 class BarcodeScanIn(BaseModel):
-    barcode: str = Field(..., example="4601234567890")
-    user_id: UUID
+    barcode: str = Field(..., description="Штрихкод продукта", example="4601234567890")
+    user_id: UUID = Field(..., description="UUID пользователя")
+    
+    model_config = {
+        "from_attributes": True,
+        "populate_by_name": True
+    }
 
 
 class OffProductOut(BaseModel):
@@ -121,4 +126,8 @@ class ScanResultOut(BaseModel):
     product_id: UUID
     created_product: bool
     created_product_type: bool
+    start_date: date
+    end_date: date
     product: OffProductOut
+
+   
