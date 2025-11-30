@@ -51,4 +51,6 @@ def delete_order(order_id : UUID4):
 @app.get("/getallproductsuser",response_model=list[UserFridgeItemDTO])
 @handle_api_exceptions
 def get_fridge_by_user(user_id: UUID4):
+    print(OrdersDAO.user_fridge(user_id))
     return OrdersDAO.user_fridge(user_id)
+
