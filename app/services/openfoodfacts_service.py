@@ -1,16 +1,20 @@
 from __future__ import annotations
+import re
 import openfoodfacts
 import datetime as dt
 from typing import Any, Dict, List
 import anyio
 from fastapi import HTTPException
-
+from app.database import SessionLocal
+from app.models import ProductType
+from sqlalchemy import select
 
 api = openfoodfacts.API(user_agent="FoodCareBackend/1.0")
 _FIELDS: List[str] = ["code",
                       "product_name", "product_name_ru", "product_name_en",
                       "brands_tags", "categories_tags_ru", "categories_tags", "image_url",
                       "ingredients_text_ru", "generic_name_ru", "ingredients_text", "generic_name"]
+russian_pattern = re.compile(r"[А-Яа-яЁё]")
 
 
 # Получение данных о продукте по шрихкоду из OpenFoodFacts
@@ -34,6 +38,37 @@ def normalize_tag_to_name(tag: str):
     return part.capitalize()
 
 
+def find_matching_product_type(prod_types: List[str]):
+    normalized_prod_types = [
+        pt.strip() for pt in prod_types if pt and pt.strip()
+    ]
+    if not normalized_prod_types:
+        return None
+
+    with SessionLocal() as session:
+        query = select(ProductType)
+        db_product_types = session.execute(query).scalars().all()
+
+    db_type_names = {
+        pt.prodtype_name.lower(): pt.prodtype_name
+        for pt in db_product_types
+        if pt.prodtype_name
+    }
+    # Поиск среди типов продуктов на русском языке
+    for prod_type in normalized_prod_types:
+        if not russian_pattern.search(prod_type):
+            continue
+        key = prod_type.lower()
+        if key in db_type_names:
+            return db_type_names[key]
+    # Если не найдены совпадения, возвращаем первый тип продукта на русском
+    for prod_type in normalized_prod_types:
+        if russian_pattern.search(prod_type):
+            return prod_type
+    # Если нет ничего на русском, возвращаем первый тип продукта
+    return normalized_prod_types[0]
+
+
 # Парсинг словаря с информацией о продуктах
 def parse_off_product(off: Dict[str, Any]) -> Dict[str, Any]:
     name = (off.get("product_name")
@@ -44,7 +79,8 @@ def parse_off_product(off: Dict[str, Any]) -> Dict[str, Any]:
     brand_tags = off.get("brands_tags") or []
     brand = (brand_tags[0].capitalize() if brand_tags else None)
 
-    prod_type = (off.get("categories_tags_ru")[0] or off.get("categories_tags")[0])
+    prod_types = off.get("categories_tags_ru", []) + off.get("categories_tags", [])
+    matched_type = find_matching_product_type(prod_types)
 
     description = (
             off.get("ingredients_text_ru")
@@ -57,7 +93,7 @@ def parse_off_product(off: Dict[str, Any]) -> Dict[str, Any]:
 
     return {
         "name": f"{name} {brand}".strip() if name and brand else (name or brand),
-        "product_type_name": prod_type,
+        "product_type_name": matched_type,
         "description": description,
         "thumbnail": thumbnail,
         "barcode": barcode,
