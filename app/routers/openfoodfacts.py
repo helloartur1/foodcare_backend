@@ -19,19 +19,17 @@ from datetime import date, timedelta
 app = APIRouter(prefix="/openfoodfacts", tags=["OpenFoodFacts"])
 
 current_date = date.today().strftime("%Y-%m-%d")
+
+
 @app.post("/scan", response_model=ScanResultOut, summary="Скан штрихкода → найти/создать ProductType, Product и Order")
 async def scan_barcode(
     user_id: UUID = Query(..., description="UUID пользователя"),
     barcode: str = Query(..., description="Штрихкод продукта"),
     start_date: date = Query(..., description="Дата начала хранения продукта"),
-    end_date : date = Query(..., description="Дата окончания хранения продукта"),
+    end_date: date = Query(..., description="Дата окончания хранения продукта"),
 ):
-    print(f"user_id: {user_id}, barcode: {barcode}")
-    print(type(barcode), type(user_id))
-
     off_raw = await fetch_off_product(barcode)
     parsed = parse_off_product(off_raw)
-
     #Проверка UUID пользователя
     with SessionLocal() as Session:
         exists = Session.execute(
@@ -58,7 +56,7 @@ async def scan_barcode(
     #Если продукта не существует, то создание нового продукта
     if not product:
         product, created_product = ProductsDAO.get_or_create_product_from_off(
-            product_name="Без названия",
+            product_name=parsed["name"] or "Без названия",
             product_thumbnail=parsed["thumbnail"],
             product_type=prodtype.prodtype_id,
             product_desc=normalize_product_desc(parsed["description"]),
@@ -74,7 +72,6 @@ async def scan_barcode(
             product_date_end=end_date,
             product_date_start=start_date,
         ))
-    print(result)
     order_id = UUID(order_res["order_id"])
     return ScanResultOut(
         order_id=order_id,
