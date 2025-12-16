@@ -1,69 +1,114 @@
 import uuid
+import os
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
-from app.database import get_auth_data
 
 from app.models import User
-from app.schemas import UserCreate  # Pydantic-схема для регистрации
+from app.schemas import UserCreate
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class AuthService:
 
+    # ---------- PASSWORD ----------
     @staticmethod
     def hash_password(password: str) -> str:
-        """Хеширует пароль"""
-        truncated = password.encode('utf-8')[:72].decode('utf-8', 'ignore')
+        truncated = password.encode("utf-8")[:72].decode("utf-8", "ignore")
         return pwd_context.hash(truncated)
 
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
-        """Проверяет пароль"""
         return pwd_context.verify(plain_password, hashed_password)
 
+    # ---------- TOKEN GENERATION ----------
     @staticmethod
-    def create_access_token(data: dict, expires_delta: timedelta) -> str:
-        """Создает JWT токен"""
+    def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+        if expires_delta is None:
+            expires_delta = timedelta(
+                minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+            )
+
+        expire = datetime.now(timezone.utc) + expires_delta
+
         to_encode = data.copy()
-        expires_delta = datetime.now(timezone.utc) + timedelta(days=30)
-        to_encode.update({"exp": expires_delta})
-        auth_data = get_auth_data()
-        encode_jwt = jwt.encode(to_encode, auth_data['secret_key'], algorithm=auth_data['algorithm'])
-        return encode_jwt
+        to_encode.update({"exp": expire})
+
+        encoded_jwt = jwt.encode(
+            to_encode,
+            os.getenv("ACCESS_TOKEN_SECRET"),
+            algorithm=os.getenv("ALGORITHM")
+        )
+
+        return encoded_jwt
 
     @staticmethod
-    def verify_token(token: str):
-        """Проверяет JWT токен"""
-        auth_data = get_auth_data()
+    def create_refresh_token(data: dict, expires_delta: timedelta | None = None) -> str:
+        if expires_delta is None:
+            expires_delta = timedelta(
+                days=int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 30))
+            )
+
+        expire = datetime.now(timezone.utc) + expires_delta
+
+        to_encode = data.copy()
+        to_encode.update({"exp": expire})
+
+        encoded_jwt = jwt.encode(
+            to_encode,
+            os.getenv("REFRESH_TOKEN_SECRET"),
+            algorithm=os.getenv("ALGORITHM")
+        )
+
+        return encoded_jwt
+
+    # ---------- TOKEN VERIFICATION ----------
+    @staticmethod
+    def verify_access_token(token: str):
         try:
-            payload = jwt.decode(token, auth_data['secret_key'], algorithms=[auth_data['algorithm']])
-
-            # Дополнительная проверка срока действия
-            exp = payload.get("exp")
-            if exp and datetime.utcnow() > datetime.fromtimestamp(exp):
-                return False  # Токен просрочен
+            payload = jwt.decode(
+                token,
+                os.getenv("ACCESS_TOKEN_SECRET"),
+                algorithms=[os.getenv("ALGORITHM")]
+            )
             return payload
+        except JWTError:
+            return None
 
-        except JWTError as e:
-            print(f"Token verification failed: {e}")
-            return False
+    @staticmethod
+    def verify_refresh_token(token: str):
+        try:
+            payload = jwt.decode(
+                token,
+                os.getenv("REFRESH_TOKEN_SECRET"),
+                algorithms=[os.getenv("ALGORITHM")]
+            )
+            return payload
+        except JWTError:
+            return None
 
+    # ---------- USER REGISTRATION ----------
     @staticmethod
     def register_user(db: Session, user_data: UserCreate) -> User:
-        existing_user = db.query(User).filter(User.user_login == user_data.user_login).first()
+        existing_user = db.query(User).filter(
+            User.user_login == user_data.user_login
+        ).first()
+
         if existing_user:
             raise ValueError("Пользователь с таким логином уже существует")
 
         hashed_password = AuthService.hash_password(user_data.password)
+
         new_user = User(
             user_login=user_data.user_login,
             user_password=hashed_password,
             user_name=user_data.user_name
         )
+
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
+
         return new_user
