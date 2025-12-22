@@ -4,9 +4,10 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
-
+from sqlalchemy import select
+from app.database import SessionLocal
 from app.models import User
-from app.schemas import UserCreate
+from app.schemas import UserCreate, UserInfo
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -112,3 +113,13 @@ class AuthService:
         db.refresh(new_user)
 
         return new_user
+    
+
+    @staticmethod
+    def get_user_by_id(user_id):
+        with SessionLocal() as session:
+            query = select(User).where(User.user_id==user_id)
+            users = session.execute(query).scalars().all()
+            return [UserInfo.model_validate(user, from_attributes=True) for user in users]
+
+

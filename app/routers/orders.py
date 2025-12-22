@@ -8,20 +8,6 @@ from app.schemas import ProductDTO, UserFridgeItemDTO
 
 app = APIRouter(prefix="/order")
 
-@app.get("/fsdfsdfsdgsdrweerqrww")
-def test():
-    try:
-        result = OrdersDAO.testtest()
-        return result
-    except UnicodeDecodeError as e:
-        print("UnicodeDecodeError в /fsdfsdfsdgsdrweerqrww:", e)
-        traceback.print_exc()
-        raise
-    except Exception as e:
-        print("Другая ошибка в /fsdfsdfsdgsdrweerqrww:", e)
-        traceback.print_exc()
-        raise
-
 @app.get("/getallorders")
 @handle_api_exceptions
 def get_all_orders():

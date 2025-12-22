@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
 from typing import Optional
-from datetime import date, timedelta
+from datetime import date
 from uuid import UUID
 import re
 
@@ -130,4 +130,8 @@ class ScanResultOut(BaseModel):
     end_date: date
     product: OffProductOut
 
-   
+class UserInfo(BaseModel):
+    user_id : UUID
+    user_name: str
+    user_login: str
+    model_config = ConfigDict(from_attributes=True)

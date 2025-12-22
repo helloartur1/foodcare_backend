@@ -25,6 +25,7 @@ class User(Base):
     orders = relationship("Order", back_populates="user")
 
 
+
 class Order(Base):
     __tablename__ = "T_Orders"
 
@@ -62,3 +63,4 @@ class OrderProduct(Base):
 
     orders = relationship("Order", back_populates="order_products")
     products = relationship("Product", back_populates="order_product")
+
