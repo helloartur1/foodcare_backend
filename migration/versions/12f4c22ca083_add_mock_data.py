@@ -56,11 +56,55 @@ def upgrade() -> None:
         },
         {
             'prodtype_id': uuid.uuid4(),
-            'prodtype_name': 'Хлебобулочные изделия'
+            'prodtype_name': 'Алкогольные напитки'
         },
         {
             'prodtype_id': uuid.uuid4(),
-            'prodtype_name': 'Мясо'
+            'prodtype_name': 'Газированные напитки'
+        },
+        {
+            'prodtype_id': uuid.uuid4(),
+            'prodtype_name': 'Ферментированные напитки'
+        },
+        {
+            'prodtype_id': uuid.uuid4(),
+            'prodtype_name': 'Овощи'
+        },
+        {
+            'prodtype_id': uuid.uuid4(),
+            'prodtype_name': 'Фрукты'
+        },
+        {
+            'prodtype_id': uuid.uuid4(),
+            'prodtype_name': 'Консервы'
+        },
+        {
+            'prodtype_id': uuid.uuid4(),
+            'prodtype_name': 'Рыба и морепродукты'
+        },
+        {
+            'prodtype_id': uuid.uuid4(),
+            'prodtype_name': 'Соусы'
+        },
+        {
+            'prodtype_id': uuid.uuid4(),
+            'prodtype_name': 'Продукты из мяса'
+        },
+        {
+            'prodtype_id': uuid.uuid4(),
+            'prodtype_name': 'Продукты сельскохозяйственного производства'
+        },
+        {
+            'prodtype_id': uuid.uuid4(),
+            'prodtype_name': 'Еда и напитки из растительного сырья'
+        },
+        {
+            'prodtype_id': uuid.uuid4(),
+            'prodtype_name': 'Сладкие закуски'
+        },
+        {
+            'prodtype_id': uuid.uuid4(),
+            'prodtype_name': 'Соленые закуски'
         }
     ]
     op.bulk_insert(producttype_table, producttype_data)
@@ -79,7 +123,7 @@ def upgrade() -> None:
             'product_id': uuid.uuid4(),
             'product_name': 'Сметана',
             'product_thumbnail': None,
-            'product_type': producttype_data[0]['prodtype_id'],
+            'product_type': producttype_data[10]['prodtype_id'],
             'product_desc': 'Сметана 15% 100г',
             'product_rating': None,
             'product_barcode': 123321123
@@ -88,7 +132,7 @@ def upgrade() -> None:
             'product_id': uuid.uuid4(),
             'product_name': 'Батон летний',
             'product_thumbnail': None,
-            'product_type': producttype_data[1]['prodtype_id'],
+            'product_type': producttype_data[10]['prodtype_id'],
             'product_desc': 'Батон 300 грамм, не нарезан',
             'product_rating': None,
             'product_barcode': 111222333
