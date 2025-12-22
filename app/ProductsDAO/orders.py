@@ -1,10 +1,10 @@
 from fastapi import HTTPException
 from pydantic import UUID4
-from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select, insert, update, delete
 from app.database import SessionLocal
 from app.decorator import handle_db_exceptions
-from app.models import Order, User, Product, ProductType, OrderProduct
+from app.models import Order, User, Product, OrderProduct
+from app.schemas import UserInfo
 from datetime import date
 from typing import Optional
 
@@ -12,12 +12,6 @@ from app.schemas import OrderProductDTO, ProductDTO, UserFridgeItemDTO
 
 
 class OrdersDAO:
-    @staticmethod
-    def testtest():
-        with SessionLocal() as session:
-            query = select(User)
-            return session.execute(query).scalars().all()
-
     @staticmethod
     @handle_db_exceptions
     def create_new_order(user_id: UUID4, order_date: date):

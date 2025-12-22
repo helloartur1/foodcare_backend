@@ -1,11 +1,12 @@
+import traceback
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import UUID4
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.schemas import UserCreate, UserDTO, UserLogin, ProductTypeDTO
+from app.schemas import UserCreate, UserLogin
 from app.services.auth_service import AuthService
-from datetime import timedelta
 from app.models import User
-
+from uuid import uuid4
 app = APIRouter()
 
 
@@ -67,3 +68,16 @@ def refresh_token(refresh_token: str):
         "access_token": new_access,
         "token_type": "bearer"
     }
+@app.get("/get_user_by_id/{user_id}")
+def test(user_id: UUID4):
+    try:
+        result = AuthService.get_user_by_id(user_id)
+        return result
+    except UnicodeDecodeError as e:
+        print("UnicodeDecodeError в /get_user_by_id:", e)
+        traceback.print_exc()
+        raise
+    except Exception as e:
+        print("Другая ошибка в /get_user_by_id:", e)
+        traceback.print_exc()
+        raise
